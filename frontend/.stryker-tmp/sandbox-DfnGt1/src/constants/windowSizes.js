@@ -1,0 +1,2 @@
+// @ts-nocheck
+export const EDIT_SCHEDULE_MIN_WINDOW_SIZE = 1000;

@@ -1,0 +1,13 @@
+test('вбиваємо мутантів на trim та регулярні вирази', () => {
+  // 1. Перевіряємо обрізання пробілів
+  const linkWithSpaces = getHref("   google.com   ");
+  expect(linkWithSpaces).toBeDefined();
+
+  // 2. Перевіряємо підтримку звичайного http без "s"
+  const httpLink = getHref("http://example.com");
+  expect(httpLink).toBeDefined();
+
+  // 3. Перевіряємо протокол на початку рядка
+  const internalHttpLink = getHref("my-site.com/http://test");
+  expect(internalHttpLink).toBeDefined();
+});

@@ -1,0 +1,5 @@
+// @ts-nocheck
+export const GROUP = 'group';
+export const TEACHER = 'teacher';
+export const FULL = 'full';
+export const DEPARTMENT = 'department';
