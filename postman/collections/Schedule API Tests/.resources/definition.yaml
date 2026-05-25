@@ -1,0 +1,2 @@
+$kind: collection
+description: API Tests for Schedule application. Covers Groups (primary resource) and Semesters (additional resource) CRUD operations.

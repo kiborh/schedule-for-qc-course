@@ -1,0 +1,44 @@
+$kind: http-request
+url: "{{baseUrl}}/semesters"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer_{{token}}
+body:
+  type: text
+  content: |-
+    {
+        "description": "{{invalidSemesterDescription}}",
+        "year": 2026,
+        "startDay": "01/12/2026",
+        "endDay": "01/09/2026",
+        "currentSemester": false,
+        "defaultSemester": false,
+        "semester_days": ["MONDAY", "TUESDAY"],
+        "semester_classes": [],
+        "semester_groups": []
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const timestamp = Date.now();
+      pm.environment.set("invalidSemesterDescription", "Invalid_" + timestamp);
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 400", () => {
+          pm.response.to.have.status(400);
+      });
+
+      pm.test("Response contains error about invalid dates", () => {
+          const json = pm.response.json();
+          pm.expect(json).to.satisfy((body) => {
+              return body.hasOwnProperty('message') || body.hasOwnProperty('errors') || body.hasOwnProperty('status');
+          });
+      });
+
+      pm.test("Response time is less than 500ms", () => {
+          pm.expect(pm.response.responseTime).to.be.below(500);
+      });
+    language: text/javascript
+order: 7000

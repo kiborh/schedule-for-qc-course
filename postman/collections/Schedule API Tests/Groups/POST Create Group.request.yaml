@@ -1,0 +1,45 @@
+$kind: http-request
+url: "{{baseUrl}}/groups"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer_{{token}}
+body:
+  type: text
+  content: |-
+    {
+        "title": "{{groupTitle}}",
+        "disable": false
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const timestamp = Date.now();
+      pm.environment.set("groupTitle", "Group_" + timestamp);
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201", () => {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Response contains created resource with id", () => {
+          const json = pm.response.json();
+          pm.expect(json).to.have.property('id');
+          pm.expect(json.id).to.be.a('number');
+      });
+
+      pm.test("Created group has correct title", () => {
+          const json = pm.response.json();
+          pm.expect(json.title).to.eql(pm.environment.get("groupTitle"));
+      });
+
+      pm.test("Response time is less than 1000ms", () => {
+          pm.expect(pm.response.responseTime).to.be.below(1000);
+      });
+
+      if (pm.response.code === 201) {
+          pm.environment.set("groupId", pm.response.json().id);
+      }
+    language: text/javascript
+order: 1000

@@ -1,0 +1,835 @@
+{
+  "info": {
+    "name": "Schedule API Tests",
+    "_postman_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "description": "API Tests for Schedule application. Covers Groups (primary resource) and Semesters (additional resource) CRUD operations.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "POST Sign In",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains token\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('token');",
+                  "    pm.expect(json.token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains email\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('email');",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 10000ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(10000);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.environment.set(\"token\", pm.response.json().token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"manager@gmail.com\",\n    \"password\": \"Qwerty!123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/sign-in",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "sign-in"]
+            }
+          }
+        },
+        {
+          "name": "POST Sign In with Wrong Password (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", () => {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Response does not contain token\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.not.have.property('token');",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains error message\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.satisfy((body) => {",
+                  "        return body.hasOwnProperty('message') || body.hasOwnProperty('error') || body.hasOwnProperty('status');",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 2000ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"manager@gmail.com\",\n    \"password\": \"WrongPassword!999\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/sign-in",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "sign-in"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Groups",
+      "item": [
+        {
+          "name": "POST Create Group",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();",
+                  "pm.environment.set(\"groupTitle\", \"Group_\" + timestamp);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains created resource with id\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json.id).to.be.a('number');",
+                  "});",
+                  "",
+                  "pm.test(\"Created group has correct title\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.title).to.eql(pm.environment.get(\"groupTitle\"));",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 1000ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.environment.set(\"groupId\", pm.response.json().id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"{{groupTitle}}\",\n    \"disable\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups"]
+            }
+          }
+        },
+        {
+          "name": "GET All Groups",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 500ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Each item has required fields\", () => {",
+                  "    const json = pm.response.json();",
+                  "    if (json.length > 0) {",
+                  "        pm.expect(json[0]).to.have.property('id');",
+                  "        pm.expect(json[0]).to.have.property('title');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups"]
+            }
+          }
+        },
+        {
+          "name": "GET Group by ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get('groupId')) {",
+                  "    console.warn('groupId is not set, skipping.');",
+                  "    pm.execution.skipRequest();",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Returns correct resource\", () => {",
+                  "    const json = pm.response.json();",
+                  "    const expectedId = parseInt(pm.environment.get(\"groupId\"));",
+                  "    pm.expect(json.id).to.eql(expectedId);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has required fields\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('title');",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 500ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/groups/{{groupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", "{{groupId}}"]
+            }
+          }
+        },
+        {
+          "name": "PUT Update Group",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get('groupId')) {",
+                  "    console.warn('groupId is not set, skipping.');",
+                  "    pm.execution.skipRequest();",
+                  "}",
+                  "const timestamp = Date.now();",
+                  "pm.environment.set(\"groupUpdatedTitle\", \"Updated_\" + timestamp);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains updated resource\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    const expectedId = parseInt(pm.environment.get(\"groupId\"));",
+                  "    pm.expect(json.id).to.eql(expectedId);",
+                  "});",
+                  "",
+                  "pm.test(\"Group title was updated\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.title).to.eql(pm.environment.get(\"groupUpdatedTitle\"));",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 1000ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"id\": {{groupId}},\n    \"title\": \"{{groupUpdatedTitle}}\",\n    \"disable\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups"]
+            }
+          }
+        },
+        {
+          "name": "DELETE Group",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get('groupId')) {",
+                  "    console.warn('groupId is not set, skipping.');",
+                  "    pm.execution.skipRequest();",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 204\", () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 1000ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});",
+                  "",
+                  "pm.environment.unset(\"groupId\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/groups/{{groupId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", "{{groupId}}"]
+            }
+          }
+        },
+        {
+          "name": "GET Non-existing Group (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains error message\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.satisfy((body) => {",
+                  "        return body.hasOwnProperty('message') || body.hasOwnProperty('error') || body.hasOwnProperty('status');",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 500ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/groups/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", "999999"]
+            }
+          }
+        },
+        {
+          "name": "POST Create Group with Empty Title (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains validation error\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.satisfy((body) => {",
+                  "        return body.hasOwnProperty('message') || body.hasOwnProperty('errors') || body.hasOwnProperty('status');",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 500ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"\",\n    \"disable\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Semesters",
+      "item": [
+        {
+          "name": "POST Create Semester",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();",
+                  "pm.environment.set(\"semesterDescription\", \"Semester_\" + timestamp);",
+                  "pm.environment.set(\"semesterYear\", \"2026\");",
+                  "pm.environment.set(\"semesterStart\", \"01/09/2026\");",
+                  "pm.environment.set(\"semesterEnd\", \"31/12/2026\");"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains created resource with id\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json.id).to.be.a('number');",
+                  "});",
+                  "",
+                  "pm.test(\"Created semester has correct description\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.description).to.eql(pm.environment.get(\"semesterDescription\"));",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 1000ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.environment.set(\"semesterId\", pm.response.json().id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"description\": \"{{semesterDescription}}\",\n    \"year\": {{semesterYear}},\n    \"startDay\": \"{{semesterStart}}\",\n    \"endDay\": \"{{semesterEnd}}\",\n    \"currentSemester\": false,\n    \"defaultSemester\": false,\n    \"semester_days\": [\"MONDAY\", \"TUESDAY\", \"WEDNESDAY\", \"THURSDAY\", \"FRIDAY\"],\n    \"semester_classes\": [],\n    \"semester_groups\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/semesters",
+              "host": ["{{baseUrl}}"],
+              "path": ["semesters"]
+            }
+          }
+        },
+        {
+          "name": "GET All Semesters",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 500ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "",
+                  "pm.test(\"Each item has required fields\", () => {",
+                  "    const json = pm.response.json();",
+                  "    if (json.length > 0) {",
+                  "        pm.expect(json[0]).to.have.property('id');",
+                  "        pm.expect(json[0]).to.have.property('description');",
+                  "        pm.expect(json[0]).to.have.property('year');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/semesters",
+              "host": ["{{baseUrl}}"],
+              "path": ["semesters"]
+            }
+          }
+        },
+        {
+          "name": "GET Semester by ID",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get('semesterId')) {",
+                  "    console.warn('semesterId is not set, skipping.');",
+                  "    pm.execution.skipRequest();",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Returns correct resource\", () => {",
+                  "    const json = pm.response.json();",
+                  "    const expectedId = parseInt(pm.environment.get(\"semesterId\"));",
+                  "    pm.expect(json.id).to.eql(expectedId);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has required fields\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('description');",
+                  "    pm.expect(json).to.have.property('year');",
+                  "    pm.expect(json).to.have.property('startDay');",
+                  "    pm.expect(json).to.have.property('endDay');",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 500ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/semesters/{{semesterId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["semesters", "{{semesterId}}"]
+            }
+          }
+        },
+        {
+          "name": "PUT Update Semester",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get('semesterId')) {",
+                  "    console.warn('semesterId is not set, skipping.');",
+                  "    pm.execution.skipRequest();",
+                  "}",
+                  "const timestamp = Date.now();",
+                  "pm.environment.set(\"semesterUpdatedDescription\", \"Updated_Semester_\" + timestamp);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains updated resource\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    const expectedId = parseInt(pm.environment.get(\"semesterId\"));",
+                  "    pm.expect(json.id).to.eql(expectedId);",
+                  "});",
+                  "",
+                  "pm.test(\"Semester description was updated\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.description).to.eql(pm.environment.get(\"semesterUpdatedDescription\"));",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 1000ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"id\": {{semesterId}},\n    \"description\": \"{{semesterUpdatedDescription}}\",\n    \"year\": 2026,\n    \"startDay\": \"01/09/2026\",\n    \"endDay\": \"31/12/2026\",\n    \"currentSemester\": false,\n    \"defaultSemester\": false,\n    \"semester_days\": [\"MONDAY\", \"TUESDAY\", \"WEDNESDAY\", \"THURSDAY\", \"FRIDAY\"],\n    \"semester_classes\": [],\n    \"semester_groups\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/semesters",
+              "host": ["{{baseUrl}}"],
+              "path": ["semesters"]
+            }
+          }
+        },
+        {
+          "name": "DELETE Semester",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.environment.get('semesterId')) {",
+                  "    console.warn('semesterId is not set, skipping.');",
+                  "    pm.execution.skipRequest();",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 204\", () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 1000ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});",
+                  "",
+                  "pm.environment.unset(\"semesterId\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/semesters/{{semesterId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["semesters", "{{semesterId}}"]
+            }
+          }
+        },
+        {
+          "name": "GET Non-existing Semester (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains error message\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.satisfy((body) => {",
+                  "        return body.hasOwnProperty('message') || body.hasOwnProperty('error') || body.hasOwnProperty('status');",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 500ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/semesters/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["semesters", "999999"]
+            }
+          }
+        },
+        {
+          "name": "POST Create Semester with Invalid Dates (400)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const timestamp = Date.now();",
+                  "pm.environment.set(\"invalidSemesterDescription\", \"Invalid_\" + timestamp);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains error about invalid dates\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.satisfy((body) => {",
+                  "        return body.hasOwnProperty('message') || body.hasOwnProperty('errors') || body.hasOwnProperty('status');",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test(\"Response time is less than 500ms\", () => {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer_{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"description\": \"{{invalidSemesterDescription}}\",\n    \"year\": 2026,\n    \"startDay\": \"01/12/2026\",\n    \"endDay\": \"01/09/2026\",\n    \"currentSemester\": false,\n    \"defaultSemester\": false,\n    \"semester_days\": [\"MONDAY\", \"TUESDAY\"],\n    \"semester_classes\": [],\n    \"semester_groups\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/semesters",
+              "host": ["{{baseUrl}}"],
+              "path": ["semesters"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

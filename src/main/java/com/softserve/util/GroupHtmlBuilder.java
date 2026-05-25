@@ -51,7 +51,9 @@ public class GroupHtmlBuilder {
         // Table
         html.append("<table class=\"schedule\">");
         html.append("<colgroup><col class=\"col-time\"/>");
-        for (int i = 0; i < WEEKDAYS.size(); i++) html.append("<col/>");
+        for (int i = 0; i < WEEKDAYS.size(); i++) {
+            html.append("<col/>");
+        }
         html.append("</colgroup>");
 
         html.append("<thead><tr>");
@@ -95,16 +97,25 @@ public class GroupHtmlBuilder {
     /**
      * Gets even or odd lesson for a given day and period.
      * If lessons are identical on both weeks, returns the same lesson for both.
+     *
+     * @param dayData the day data containing lessons
+     * @param period  the period to look up
+     * @param even    true for even week, false for odd week
+     * @return the matching lesson, or null if not found
      */
     private LessonsInScheduleDTO getLesson(DaysOfWeekWithClassesForGroupDTO dayData,
                                            PeriodDTO period, boolean even) {
-        if (dayData == null || dayData.getClasses() == null) return null;
+        if (dayData == null || dayData.getClasses() == null) {
+            return null;
+        }
 
         ClassesInScheduleForGroupDTO cls = dayData.getClasses().stream()
                 .filter(c -> c.getPeriod() != null && c.getPeriod().getId().equals(period.getId()))
                 .findFirst().orElse(null);
 
-        if (cls == null || cls.getWeeks() == null) return null;
+        if (cls == null || cls.getWeeks() == null) {
+            return null;
+        }
 
         return even ? cls.getWeeks().getEven() : cls.getWeeks().getOdd();
     }
@@ -153,7 +164,9 @@ public class GroupHtmlBuilder {
     }
 
     private static String esc(String text) {
-        if (text == null) return "";
+        if (text == null) {
+            return "";
+        }
         return text.replace("&", "&amp;").replace("<", "&lt;")
                 .replace(">", "&gt;").replace("\"", "&quot;");
     }

@@ -1,0 +1,26 @@
+$kind: http-request
+url: "{{baseUrl}}/groups/{{groupId}}"
+method: DELETE
+headers:
+  Authorization: Bearer_{{token}}
+scripts:
+  - type: beforeRequest
+    code: |-
+      if (!pm.environment.get('groupId')) {
+          console.warn('groupId is not set, skipping.');
+          pm.execution.skipRequest();
+      }
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200 or 204", () => {
+          pm.expect(pm.response.code).to.be.oneOf([200, 204]);
+      });
+
+      pm.test("Response time is less than 1000ms", () => {
+          pm.expect(pm.response.responseTime).to.be.below(1000);
+      });
+
+      pm.environment.unset("groupId");
+    language: text/javascript
+order: 5000

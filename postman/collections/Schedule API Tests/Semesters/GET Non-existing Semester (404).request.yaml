@@ -1,0 +1,24 @@
+$kind: http-request
+url: "{{baseUrl}}/semesters/999999"
+method: GET
+headers:
+  Authorization: Bearer_{{token}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 404", () => {
+          pm.response.to.have.status(404);
+      });
+
+      pm.test("Response contains error message", () => {
+          const json = pm.response.json();
+          pm.expect(json).to.satisfy((body) => {
+              return body.hasOwnProperty('message') || body.hasOwnProperty('error') || body.hasOwnProperty('status');
+          });
+      });
+
+      pm.test("Response time is less than 500ms", () => {
+          pm.expect(pm.response.responseTime).to.be.below(500);
+      });
+    language: text/javascript
+order: 6000

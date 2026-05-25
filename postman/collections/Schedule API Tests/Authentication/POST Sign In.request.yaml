@@ -1,0 +1,39 @@
+$kind: http-request
+url: "{{baseUrl}}/auth/sign-in"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "email": "manager@gmail.com",
+        "password": "Qwerty!123"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", () => {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response contains token", () => {
+          const json = pm.response.json();
+          pm.expect(json).to.have.property('token');
+          pm.expect(json.token).to.be.a('string').and.not.empty;
+      });
+
+      pm.test("Response contains email", () => {
+          const json = pm.response.json();
+          pm.expect(json).to.have.property('email');
+      });
+
+      pm.test("Response time is less than 2000ms", () => {
+          pm.expect(pm.response.responseTime).to.be.below(2000);
+      });
+
+      if (pm.response.code === 200) {
+          pm.environment.set("token", pm.response.json().token);
+      }
+    language: text/javascript
+order: 1000

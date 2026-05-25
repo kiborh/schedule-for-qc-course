@@ -1,0 +1,47 @@
+$kind: http-request
+url: "{{baseUrl}}/groups"
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer_{{token}}
+body:
+  type: text
+  content: |-
+    {
+        "id": {{groupId}},
+        "title": "{{groupUpdatedTitle}}",
+        "disable": false
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      if (!pm.environment.get('groupId')) {
+          console.warn('groupId is not set, skipping.');
+          pm.execution.skipRequest();
+      }
+      const timestamp = Date.now();
+      pm.environment.set("groupUpdatedTitle", "Updated_" + timestamp);
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 200", () => {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Response contains updated resource", () => {
+          const json = pm.response.json();
+          pm.expect(json).to.have.property('id');
+          const expectedId = parseInt(pm.environment.get("groupId"));
+          pm.expect(json.id).to.eql(expectedId);
+      });
+
+      pm.test("Group title was updated", () => {
+          const json = pm.response.json();
+          pm.expect(json.title).to.eql(pm.environment.get("groupUpdatedTitle"));
+      });
+
+      pm.test("Response time is less than 1000ms", () => {
+          pm.expect(pm.response.responseTime).to.be.below(1000);
+      });
+    language: text/javascript
+order: 4000

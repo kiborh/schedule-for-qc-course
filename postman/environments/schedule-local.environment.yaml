@@ -1,0 +1,40 @@
+name: schedule-local
+values:
+  - key: baseUrl
+    value: 'http://localhost:8081'
+  - key: token
+    value: ''
+  - key: teacherName
+    value: ''
+  - key: teacherSurname
+    value: ''
+  - key: teacherPatronymic
+    value: ''
+  - key: teacherPosition
+    value: ''
+  - key: teacherUpdatedSurname
+    value: ''
+  - key: subjectName
+    value: ''
+  - key: subjectUpdatedName
+    value: ''
+  - key: departmentName
+    value: ''
+  - key: departmentUpdatedName
+    value: ''
+  - key: groupTitle
+    value: ''
+  - key: groupUpdatedTitle
+    value: ''
+  - key: semesterDescription
+    value: ''
+  - key: semesterYear
+    value: ''
+  - key: semesterStart
+    value: ''
+  - key: semesterEnd
+    value: ''
+  - key: semesterUpdatedDescription
+    value: ''
+  - key: invalidSemesterDescription
+    value: ''

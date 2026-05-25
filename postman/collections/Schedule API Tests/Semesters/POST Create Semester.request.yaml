@@ -1,0 +1,55 @@
+$kind: http-request
+url: "{{baseUrl}}/semesters"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer_{{token}}
+body:
+  type: text
+  content: |-
+    {
+        "description": "{{semesterDescription}}",
+        "year": {{semesterYear}},
+        "startDay": "{{semesterStart}}",
+        "endDay": "{{semesterEnd}}",
+        "currentSemester": false,
+        "defaultSemester": false,
+        "semester_days": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
+        "semester_classes": [],
+        "semester_groups": []
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const timestamp = Date.now();
+      pm.environment.set("semesterDescription", "Semester_" + timestamp);
+      pm.environment.set("semesterYear", "2026");
+      pm.environment.set("semesterStart", "01/09/2026");
+      pm.environment.set("semesterEnd", "31/12/2026");
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test("Status code is 201", () => {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Response contains created resource with id", () => {
+          const json = pm.response.json();
+          pm.expect(json).to.have.property('id');
+          pm.expect(json.id).to.be.a('number');
+      });
+
+      pm.test("Created semester has correct description", () => {
+          const json = pm.response.json();
+          pm.expect(json.description).to.eql(pm.environment.get("semesterDescription"));
+      });
+
+      pm.test("Response time is less than 1000ms", () => {
+          pm.expect(pm.response.responseTime).to.be.below(1000);
+      });
+
+      if (pm.response.code === 201) {
+          pm.environment.set("semesterId", pm.response.json().id);
+      }
+    language: text/javascript
+order: 1000

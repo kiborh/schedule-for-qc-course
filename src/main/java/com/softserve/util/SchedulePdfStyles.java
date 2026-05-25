@@ -13,7 +13,7 @@ import java.util.ResourceBundle;
  */
 public final class SchedulePdfStyles {
 
-    private SchedulePdfStyles() {}
+    private SchedulePdfStyles() { }
 
     public static String get() {
         return """
@@ -30,7 +30,6 @@ public final class SchedulePdfStyles {
                     margin: 0;
                     padding: 0;
                 }
-
                 .header__title {
                     font-size: 14pt;
                     font-weight: bold;
@@ -54,7 +53,6 @@ public final class SchedulePdfStyles {
                 .legend__dot--lecture   { background-color: #4a6cf7; }
                 .legend__dot--practical { background-color: #0fa968; }
                 .legend__dot--lab       { background-color: #e08830; }
-
                 .schedule {
                     width: 100%;
                     border-collapse: collapse;
@@ -178,7 +176,12 @@ public final class SchedulePdfStyles {
                 "</div>";
     }
 
-    /** Time cell with rowspan=2 for even+odd rows. */
+    /**
+     * Time cell with rowspan=2 for even+odd rows.
+     *
+     * @param period the period to display
+     * @return HTML string for the time cell
+     */
     public static String timeCellHtml(PeriodDTO period) {
         return "<td class=\"time-cell\" rowspan=\"2\">" +
                 "<div class=\"time__pair\">" + esc(period.getName()) + "</div>" +
@@ -187,7 +190,13 @@ public final class SchedulePdfStyles {
                 "</div></td>";
     }
 
-    /** Renders a lesson card for group schedule (shows teacher + room + link). */
+    /**
+     * Renders a lesson card for group schedule (shows teacher + room + link).
+     *
+     * @param lesson the lesson to render
+     * @param bundle the resource bundle for localized strings
+     * @return HTML string for the lesson card
+     */
     public static String lessonCardHtml(LessonsInScheduleDTO lesson, ResourceBundle bundle) {
         if (lesson == null || lesson.getSubjectForSite() == null || lesson.getSubjectForSite().isBlank()) {
             return emptyHtml();
@@ -216,7 +225,13 @@ public final class SchedulePdfStyles {
         return sb.toString();
     }
 
-    /** Renders a lesson card for teacher schedule (shows group + room). */
+    /**
+     * Renders a lesson card for teacher schedule (shows group + room).
+     *
+     * @param lesson the lesson to render
+     * @param bundle the resource bundle for localized strings
+     * @return HTML string for the lesson card
+     */
     public static String teacherLessonCardHtml(LessonForTeacherScheduleDTO lesson, ResourceBundle bundle) {
         String cssType = mapLessonTypeToCss(
                 lesson.getLessonType() != null ? lesson.getLessonType().name() : null);
@@ -244,10 +259,16 @@ public final class SchedulePdfStyles {
     // ==================== Mapping helpers ====================
 
     public static String mapLessonTypeToCss(String lessonType) {
-        if (lessonType == null) return "lecture";
+        if (lessonType == null) {
+            return "lecture";
+        }
         String upper = lessonType.toUpperCase();
-        if (upper.contains("LAB") || upper.contains("ЛАБ")) return "lab";
-        if (upper.contains("PRAC") || upper.contains("ПРАК")) return "practical";
+        if (upper.contains("LAB") || upper.contains("ЛАБ")) {
+            return "lab";
+        }
+        if (upper.contains("PRAC") || upper.contains("ПРАК")) {
+            return "practical";
+        }
         return "lecture";
     }
 
@@ -261,12 +282,16 @@ public final class SchedulePdfStyles {
     }
 
     public static String formatTeacherShort(TeacherDTO teacher) {
-        if (teacher == null) return "";
+        if (teacher == null) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         if (teacher.getPosition() != null && !teacher.getPosition().isBlank()) {
             sb.append(teacher.getPosition()).append(" ");
         }
-        if (teacher.getSurname() != null) sb.append(teacher.getSurname());
+        if (teacher.getSurname() != null) {
+            sb.append(teacher.getSurname());
+        }
         if (teacher.getName() != null && !teacher.getName().isEmpty()) {
             sb.append(" ").append(teacher.getName().charAt(0)).append(".");
         }
@@ -283,7 +308,9 @@ public final class SchedulePdfStyles {
     }
 
     static String esc(String text) {
-        if (text == null) return "";
+        if (text == null) {
+            return "";
+        }
         return text.replace("&", "&amp;").replace("<", "&lt;")
                 .replace(">", "&gt;").replace("\"", "&quot;");
     }

@@ -7,5 +7,5 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 @TestConfiguration
 public class TestConfig {
     @MockBean
-    ScheduleCacheService cacheService;
+    private ScheduleCacheService cacheService;
 }

@@ -56,6 +56,9 @@ public class PdfReportGenerator {
     /**
      * Converts an HTML string into a PDF byte array.
      * Registers Cyrillic-capable fonts with Identity-H encoding.
+     *
+     * @param html the HTML string to render
+     * @return a ByteArrayOutputStream containing the PDF bytes
      */
     private ByteArrayOutputStream renderHtmlToPdf(String html) {
         try {
@@ -88,6 +91,8 @@ public class PdfReportGenerator {
     /**
      * Registers .ttf fonts from classpath resources with Identity-H encoding
      * for proper Cyrillic/Unicode rendering.
+     *
+     * @param renderer the ITextRenderer to register fonts with
      */
     private void registerFonts(ITextRenderer renderer) throws Exception {
         ITextFontResolver resolver = renderer.getFontResolver();

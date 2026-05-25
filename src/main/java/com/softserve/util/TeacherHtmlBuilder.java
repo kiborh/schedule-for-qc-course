@@ -68,7 +68,9 @@ public class TeacherHtmlBuilder {
         // Table
         html.append("<table class=\"schedule\">");
         html.append("<colgroup><col class=\"col-time\"/>");
-        for (int i = 0; i < activeDays.size(); i++) html.append("<col/>");
+        for (int i = 0; i < activeDays.size(); i++) {
+            html.append("<col/>");
+        }
         html.append("</colgroup>");
 
         html.append("<thead><tr>");
@@ -116,6 +118,10 @@ public class TeacherHtmlBuilder {
     /**
      * Merges multiple lessons for the same period into a single card.
      * Groups are listed comma-separated. If subjects differ, the most frequent one is used.
+     *
+     * @param lessons the list of lessons to merge
+     * @param bundle  the resource bundle for localized strings
+     * @return HTML string for the merged lesson card
      */
     private String renderLessons(List<LessonForTeacherScheduleDTO> lessons, ResourceBundle bundle) {
         if (lessons.isEmpty()) {
@@ -190,14 +196,18 @@ public class TeacherHtmlBuilder {
         return allDays.stream()
                 .filter(d -> {
                     DaysOfWeekWithClassesForTeacherDTO data = dayMap.get(d);
-                    if (data == null) return false;
+                    if (data == null) {
+                        return false;
+                    }
                     return hasLessons(data.getEvenWeek()) || hasLessons(data.getOddWeek());
                 })
                 .collect(Collectors.toList());
     }
 
     private boolean hasLessons(ClassesInScheduleForTeacherDTO week) {
-        if (week == null || week.getPeriods() == null) return false;
+        if (week == null || week.getPeriods() == null) {
+            return false;
+        }
         return week.getPeriods().stream()
                 .anyMatch(c -> c.getLessons() != null && c.getLessons().stream()
                         .anyMatch(l -> l.getSubjectForSite() != null && !l.getSubjectForSite().isBlank()));
@@ -208,10 +218,16 @@ public class TeacherHtmlBuilder {
     /**
      * Trims the full list of periods to only those from the earliest occupied
      * to the latest occupied (inclusive), keeping empty ones in between.
+     *
+     * @param allPeriods all available periods sorted by start time
+     * @param dayMap     map of days to their lesson data
+     * @return trimmed sublist of periods
      */
     private List<PeriodDTO> trimPeriodsToOccupied(List<PeriodDTO> allPeriods,
                                                   Map<DayOfWeek, DaysOfWeekWithClassesForTeacherDTO> dayMap) {
-        if (allPeriods.isEmpty()) return allPeriods;
+        if (allPeriods.isEmpty()) {
+            return allPeriods;
+        }
 
         Set<Long> occupiedPeriodIds = new HashSet<>();
         for (DaysOfWeekWithClassesForTeacherDTO day : dayMap.values()) {
@@ -220,20 +236,27 @@ public class TeacherHtmlBuilder {
         }
 
         // Find first and last occupied index
-        int first = -1, last = -1;
+        int first = -1;
+        int last = -1;
         for (int i = 0; i < allPeriods.size(); i++) {
             if (occupiedPeriodIds.contains(allPeriods.get(i).getId())) {
-                if (first == -1) first = i;
+                if (first == -1) {
+                    first = i;
+                }
                 last = i;
             }
         }
 
-        if (first == -1) return allPeriods; // no lessons at all, show all
+        if (first == -1) {
+            return allPeriods; // no lessons at all, show all
+        }
         return allPeriods.subList(first, last + 1);
     }
 
     private void collectOccupiedPeriodIds(ClassesInScheduleForTeacherDTO week, Set<Long> ids) {
-        if (week == null || week.getPeriods() == null) return;
+        if (week == null || week.getPeriods() == null) {
+            return;
+        }
         for (ClassForTeacherScheduleDTO cls : week.getPeriods()) {
             if (cls.getPeriod() != null && cls.getLessons() != null) {
                 boolean hasLesson = cls.getLessons().stream()
@@ -273,7 +296,9 @@ public class TeacherHtmlBuilder {
     }
 
     private void collectPeriodsFromWeek(ClassesInScheduleForTeacherDTO week, Map<Long, PeriodDTO> map) {
-        if (week == null || week.getPeriods() == null) return;
+        if (week == null || week.getPeriods() == null) {
+            return;
+        }
         for (ClassForTeacherScheduleDTO cls : week.getPeriods()) {
             if (cls.getPeriod() != null) {
                 map.putIfAbsent(cls.getPeriod().getId(), cls.getPeriod());
@@ -282,11 +307,19 @@ public class TeacherHtmlBuilder {
     }
 
     private String formatTeacherFull(TeacherDTO t) {
-        if (t == null) return "";
+        if (t == null) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
-        if (t.getSurname() != null) sb.append(t.getSurname());
-        if (t.getName() != null) sb.append(" ").append(t.getName());
-        if (t.getPatronymic() != null) sb.append(" ").append(t.getPatronymic());
+        if (t.getSurname() != null) {
+            sb.append(t.getSurname());
+        }
+        if (t.getName() != null) {
+            sb.append(" ").append(t.getName());
+        }
+        if (t.getPatronymic() != null) {
+            sb.append(" ").append(t.getPatronymic());
+        }
         return sb.toString().trim();
     }
 
@@ -318,8 +351,11 @@ public class TeacherHtmlBuilder {
     }
 
     private static String esc(String text) {
-        if (text == null) return "";
+        if (text == null) {
+            return "";
+        }
         return text.replace("&", "&amp;").replace("<", "&lt;")
                 .replace(">", "&gt;").replace("\"", "&quot;");
     }
 }
+
